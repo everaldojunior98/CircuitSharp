@@ -9,7 +9,10 @@ namespace Demo
     {
         public static void Main(string[] args)
         {
-            var circuit = new Circuit();
+            var circuit = new Circuit(error =>
+            {
+                Console.WriteLine(error.Code);
+            });
 
             var voltageInput = circuit.Create<VoltageInput>(Voltage.WaveType.Dc);
             voltageInput.SetMaxVoltage(10);

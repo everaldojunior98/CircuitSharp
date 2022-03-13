@@ -45,6 +45,7 @@
     <Compile Include="Components\Wire.cs" />
     <Compile Include="Core\Circuit.cs" />
     <Compile Include="Core\CircuitElement.cs" />
+    <Compile Include="Core\Error.cs" />
     <Compile Include="Core\ScopeFrame.cs" />
     <Compile Include="Core\FindPathInfo.cs" />
     <Compile Include="Core\ICircuitElement.cs" />

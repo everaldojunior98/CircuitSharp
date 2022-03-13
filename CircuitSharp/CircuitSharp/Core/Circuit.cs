@@ -42,6 +42,7 @@ namespace CircuitSharp.Core
 
         private Thread simulationThread;
         private Action afterSimulationTick;
+        private readonly Action<Error> onError;
 
         private bool isSimulating;
 
@@ -49,7 +50,7 @@ namespace CircuitSharp.Core
 
         #region Constructor
 
-        public Circuit()
+        public Circuit(Action<Error> onError)
         {
             SetTimeStep(5E-6);
             needAnalyze = true;
@@ -58,6 +59,7 @@ namespace CircuitSharp.Core
             nodeMesh = new List<long[]>();
             nodeList = new List<long>();
             idGenerator = new IdGenerator();
+            this.onError = onError;
         }
 
         #endregion
@@ -319,9 +321,10 @@ namespace CircuitSharp.Core
                     var ticks = tickTimeInterval * Stopwatch.Frequency / 1000000;
                     while (startNew.ElapsedTicks < ticks) ;
                 }
-                catch
+                catch (CircuitException exception)
                 {
                     StopSimulation();
+                    onError(exception.Error);
                     break;
                 }
             }
@@ -344,28 +347,13 @@ namespace CircuitSharp.Core
                 var elementsCount = elements.Count - 1;
                 var meshCount = nodeMesh.Count - 1;
                 if (elementsCount != meshCount)
-                    throw new System.Exception("AddElement array length mismatch");
+                    throw new CircuitException(new Error(Error.ErrorCode.E8, element));
             }
         }
 
         private long GetNodeId(int index)
         {
             return index < nodeList.Count ? nodeList[index] : 0;
-        }
-
-        private void DoTicks(int ticks)
-        {
-            if (elements.Count == 0)
-                return;
-
-            if (needAnalyze)
-                Analyze();
-
-            if (needAnalyze)
-                return;
-
-            for (var x = 0; x < ticks; x++)
-                Tick();
         }
 
         private void Tick()
@@ -401,7 +389,7 @@ namespace CircuitSharp.Core
                 {
                     var x = circuitMatrix[i][j];
                     if (double.IsNaN(x) || double.IsInfinity(x))
-                        Panic("NaN/Infinite matrix!", null);
+                        LogError(new Error(Error.ErrorCode.E1, null));
                 }
 
                 // If the circuit is non-Linear, factor it now,
@@ -413,7 +401,7 @@ namespace CircuitSharp.Core
                         break;
 
                     if (!LuFactor(circuitMatrix, circuitMatrixSize, circuitPermute))
-                        Panic("Singular matrix!", null);
+                        LogError(new Error(Error.ErrorCode.E2, null));
                 }
 
                 // Solve the factorized matrix
@@ -424,7 +412,7 @@ namespace CircuitSharp.Core
                     var rowInfo = circuitRowInfo[j];
                     var res = rowInfo.Type == RowInfo.RowType.RowConst ? rowInfo.Value : circuitRightSide[rowInfo.MapCol];
 
-                    // If any resuit is NaN, break
+                    // If any result is NaN, break
                     if (double.IsNaN(res))
                     {
                         converged = false;
@@ -456,11 +444,8 @@ namespace CircuitSharp.Core
                     break;
             }
 
-            if (subIteration > 5)
-                Debug.WriteLine("Nonlinear curcuit converged after {0} iterations.", subIteration);
-
             if (subIteration == subIterationCount)
-                Panic("Convergence failed!", null);
+                LogError(new Error(Error.ErrorCode.E3, null));
 
             // Round to 12 digits
             time = Math.Round(time + timeStep, 12);
@@ -696,7 +681,7 @@ namespace CircuitSharp.Core
                     var findPathInfo = new FindPathInfo(this, FindPathInfo.PathType.Induct, element,
                         element.GetLeadNode(1));
                     if (!findPathInfo.FindPath(element.GetLeadNode(0)))
-                        Panic("No path for current source!", element);
+                        LogError(new Error(Error.ErrorCode.E4, element));
                 }
 
                 // look for voltage source loops
@@ -705,7 +690,7 @@ namespace CircuitSharp.Core
                     var findPathInfo = new FindPathInfo(this, FindPathInfo.PathType.Voltage, element,
                         element.GetLeadNode(1));
                     if (findPathInfo.FindPath(element.GetLeadNode(0)))
-                        Panic("Voltage source/wire loop with no resistance!", element);
+                        LogError(new Error(Error.ErrorCode.E5, element));
                 }
 
                 // look for shorted caps, or caps w/ voltage but no R
@@ -722,7 +707,7 @@ namespace CircuitSharp.Core
                         findPathInfo = new FindPathInfo(this, FindPathInfo.PathType.CapV, element,
                             element.GetLeadNode(1));
                         if (findPathInfo.FindPath(element.GetLeadNode(0)))
-                            Panic("Capacitor loop with no resistance!", element);
+                            LogError(new Error(Error.ErrorCode.E6, element));
                     }
                 }
             }
@@ -772,7 +757,7 @@ namespace CircuitSharp.Core
                 if (leadX == matrixSize)
                 {
                     if (qp == -1)
-                        Panic("Matrix error", null);
+                        LogError(new Error(Error.ErrorCode.E7, null));
 
                     var info = circuitRowInfo[qp];
                     if (qm == -1)
@@ -931,14 +916,14 @@ namespace CircuitSharp.Core
             // here instead of needing to do it every frame.
             if (!circuitNonLinear)
                 if (!LuFactor(circuitMatrix, circuitMatrixSize, circuitPermute))
-                    Panic("Singular matrix!", null);
+                    LogError(new Error(Error.ErrorCode.E2, null));
         }
 
-        private void Panic(string why, ICircuitElement element)
+        private void LogError(Error error)
         {
             circuitMatrix = null;
             needAnalyze = true;
-            throw new Exception(why);
+            throw new CircuitException(error);
         }
 
         // stamp value x in row i, column j, meaning that a voltage change
