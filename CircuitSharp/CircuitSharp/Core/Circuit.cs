@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using CircuitSharp.Components;
 using CircuitSharp.Components.Base;
 
@@ -12,6 +13,8 @@ namespace CircuitSharp.Core
 
         private double time;
         private double timeStep;
+        //Microseconds
+        private double tickTimeInterval;
 
         private readonly List<ICircuitElement> elements;
         private readonly List<long[]> nodeMesh;
@@ -37,14 +40,20 @@ namespace CircuitSharp.Core
 
         private readonly IdGenerator idGenerator;
 
+        private Thread simulationThread;
+        private Action afterSimulationTick;
+
+        private bool isSimulating;
+
         #endregion
 
         #region Constructor
 
         public Circuit()
         {
-            timeStep = 5E-6;
+            SetTimeStep(5E-6);
             needAnalyze = true;
+            isSimulating = false;
             elements = new List<ICircuitElement>();
             nodeMesh = new List<long[]>();
             nodeList = new List<long>();
@@ -55,7 +64,40 @@ namespace CircuitSharp.Core
 
         #region Public Methods
 
+        #region Simulation Thread
+
+        public void StartSimulation(Action afterSimulationTickAction)
+        {
+            if (simulationThread != null)
+            {
+                simulationThread.Abort();
+                simulationThread.Join();
+            }
+
+            simulationThread = new Thread(SimulationLoop);
+            afterSimulationTick = afterSimulationTickAction;
+            simulationThread.Start();
+        }
+
+        public void StopSimulation()
+        {
+            if (isSimulating && simulationThread != null)
+            {
+                isSimulating = false;
+                simulationThread.Abort();
+                simulationThread.Join();
+                simulationThread = null;
+            }
+        }
+
+        #endregion
+
         #region Get/Set Methods
+
+        public double GetTickTimeInterval()
+        {
+            return tickTimeInterval;
+        }
 
         public int GetNodesCount()
         {
@@ -84,7 +126,9 @@ namespace CircuitSharp.Core
 
         public void SetTimeStep(double newTimeStep)
         {
-            timeStep = time;
+            timeStep = newTimeStep;
+            tickTimeInterval = newTimeStep * 1E+6;
+
             needAnalyze = true;
         }
 
@@ -143,11 +187,6 @@ namespace CircuitSharp.Core
         {
             var vn = nodeList.Count + vs;
             StampRightSide(vn, v);
-        }
-
-        public void DoTick()
-        {
-            DoTicks(1);
         }
 
         public void StampCurrentSource(int n1, int n2, double i)
@@ -248,6 +287,47 @@ namespace CircuitSharp.Core
         #endregion
 
         #region Private Methods
+
+        #region Simulation Thread
+
+        private void SimulationLoop()
+        {
+            isSimulating = true;
+            while (isSimulating)
+            {
+                try
+                {
+                    if (elements.Count == 0)
+                    {
+                        StopSimulation();
+                        break;
+                    }
+
+                    if (needAnalyze)
+                        Analyze();
+
+                    if (needAnalyze)
+                    {
+                        StopSimulation();
+                        break;
+                    }
+
+                    Tick();
+                    afterSimulationTick();
+
+                    var startNew = Stopwatch.StartNew();
+                    var ticks = tickTimeInterval * Stopwatch.Frequency / 1000000;
+                    while (startNew.ElapsedTicks < ticks) ;
+                }
+                catch
+                {
+                    StopSimulation();
+                    break;
+                }
+            }
+        }
+
+        #endregion
 
         #region Circuit Methods
 
