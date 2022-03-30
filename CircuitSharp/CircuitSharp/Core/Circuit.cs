@@ -323,8 +323,8 @@ namespace CircuitSharp.Core
                 }
                 catch (CircuitException exception)
                 {
-                    StopSimulation();
                     onError(exception.Error);
+                    StopSimulation();
                     break;
                 }
             }

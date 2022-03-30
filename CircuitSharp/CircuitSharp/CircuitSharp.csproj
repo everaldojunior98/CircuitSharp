@@ -42,6 +42,7 @@
     <Compile Include="Components\Resistor.cs" />
     <Compile Include="Components\Base\Voltage.cs" />
     <Compile Include="Components\VoltageInput.cs" />
+    <Compile Include="Components\Output.cs" />
     <Compile Include="Components\Wire.cs" />
     <Compile Include="Core\Circuit.cs" />
     <Compile Include="Core\CircuitElement.cs" />
