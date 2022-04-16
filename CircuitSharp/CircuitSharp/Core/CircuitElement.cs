@@ -149,9 +149,9 @@
 
         #endregion
 
-        #region Private Methods
+        #region Protected Methods
 
-        private void AllocLeads()
+        protected void AllocLeads()
         {
             LeadNode = new int[GetLeadCount() + GetInternalLeadCount()];
             LeadVolt = new double[GetLeadCount() + GetInternalLeadCount()];
