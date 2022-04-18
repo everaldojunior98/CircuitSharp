@@ -1,7 +1,7 @@
 ﻿using System;
 using CircuitSharp.Components.Chips;
 using CLanguage;
-using static CircuitSharp.Components.Base.Chip.Pin;
+using static CircuitSharp.Components.Base.Pin;
 
 namespace CircuitSharp.Machines
 {
@@ -10,11 +10,6 @@ namespace CircuitSharp.Machines
         #region Fields
 
         private readonly ATmega328P aTmega328P;
-        private const int AnalogReadResolution = 10;
-        private const int AnalogWriteResolution = 8;
-        private const int HighVoltage = 5;
-        private const int LowVoltage = 0;
-        private const int MinVoltageToBeValid = HighVoltage / 2;
 
         #endregion
 
@@ -73,7 +68,7 @@ namespace CircuitSharp.Machines
             AddInternalFunction("int digitalRead (int pin)", interpreter =>
             {
                 var pin = interpreter.ReadArg(0).Int16Value;
-                var value = aTmega328P.GetPin(pin).Voltage > MinVoltageToBeValid;
+                var value = aTmega328P.GetPin(pin).GetVoltage() > ATmega328P.MaxVoltage / 2;
                 interpreter.Push(value);
             });
 
@@ -81,24 +76,24 @@ namespace CircuitSharp.Machines
             {
                 var pin = interpreter.ReadArg(0).Int16Value;
                 var value = interpreter.ReadArg(1).Int16Value;
-                aTmega328P.GetPin(pin).Voltage = value > 0 ? HighVoltage : LowVoltage;
+                aTmega328P.GetPin(pin).DutyCycle = value > 0 ? 1 : 0;
             });
 
             AddInternalFunction("int analogRead (int pin)", interpreter =>
             {
                 var pin = interpreter.ReadArg(0).Int16Value;
-                var maxInputValue = Math.Pow(2, AnalogReadResolution) - 1;
-                var value = (int) (aTmega328P.GetPin(pin).Voltage * maxInputValue / HighVoltage);
+                var maxInputValue = Math.Pow(2, ATmega328P.AnalogReadResolution) - 1;
+                var value = (int) (aTmega328P.GetPin(pin).GetVoltage() * maxInputValue / ATmega328P.MaxVoltage);
                 interpreter.Push(value);
             });
 
             AddInternalFunction("void analogWrite (int pin, int value)", interpreter =>
             {
                 var pin = interpreter.ReadArg(0).Int16Value;
-                var value = Math.Min(Math.Max((int) interpreter.ReadArg(1).Int16Value, LowVoltage),
-                    Math.Pow(2, AnalogWriteResolution) - 1);
-
-
+                var value = Math.Min(Math.Max((int) interpreter.ReadArg(1).Int16Value, ATmega328P.MinVoltage),
+                    Math.Pow(2, ATmega328P.AnalogWriteResolution) - 1);
+                var dutyCycle = Math.Round(value / (Math.Pow(2, ATmega328P.AnalogWriteResolution) - 1), 2);
+                aTmega328P.GetPin(pin).DutyCycle = dutyCycle;
             });
 
             AddInternalFunction("void delay (unsigned long ms)", interpreter =>

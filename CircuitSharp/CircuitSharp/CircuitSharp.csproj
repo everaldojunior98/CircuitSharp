@@ -38,7 +38,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Components\Base\Chip.cs" />
+    <Compile Include="Components\Base\Pin.cs" />
     <Compile Include="Components\Capacitor.cs" />
     <Compile Include="Components\Chips\ATmega328P.cs" />
     <Compile Include="Components\CurrentSource.cs" />
