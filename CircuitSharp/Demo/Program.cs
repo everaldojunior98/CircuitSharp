@@ -31,15 +31,15 @@ namespace Demo
             void setup() 
             {
                 pinMode(0, INPUT);
-                pinMode(1, OUTPUT);
+                pinMode(A1, OUTPUT);
             }
             void loop()
             {
-                //analogWrite(1, 255);
-                digitalWrite(1, HIGH);
+                analogWrite(A1, 127);
+                //digitalWrite(1, HIGH);
                 delay(1000);
-                //analogWrite(1, 0);
-                digitalWrite(1, LOW);
+                analogWrite(A1, 0);
+                //digitalWrite(1, LOW);
                 delay(1000);
             }
             ";
@@ -51,7 +51,7 @@ namespace Demo
 
             circuit.StartSimulation(() =>
             {
-                Console.WriteLine(circuit.GetTime() + " :: " + aTmega328.GetPin(1).GetVoltage() + " :: " + aTmega328.GetPin(1).Current);
+                Console.WriteLine(circuit.GetTime() + " :: " + aTmega328.GetPinVoltage(ATmega328P.A1));
             });
 
             Console.ReadLine();

@@ -7,7 +7,8 @@
         public enum PinType
         {
             Analog,
-            Digital
+            Digital,
+            DigitalPwm
         }
 
         public enum PinMode
@@ -17,12 +18,13 @@
         }
 
         public PinMode Mode;
-        public PinType Type;
 
         public double DutyCycle;
         public double Current;
 
         public int VoltSourceId;
+
+        public bool IsControlPin;
 
         #endregion
 
@@ -30,15 +32,17 @@
 
         private readonly string name;
         private readonly double maxVoltage;
+        private readonly PinType type;
 
         #endregion
 
         #region Constructor
 
-        public Pin(string name, double maxVoltage)
+        public Pin(string name, double maxVoltage, PinType type)
         {
             this.name = name;
             this.maxVoltage = maxVoltage;
+            this.type = type;
         }
 
         #endregion
@@ -48,6 +52,11 @@
         public string GetName()
         {
             return name;
+        }
+
+        public new PinType GetType()
+        {
+            return type;
         }
 
         public double GetVoltage()
