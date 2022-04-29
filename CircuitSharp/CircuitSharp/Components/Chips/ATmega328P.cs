@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using CircuitSharp.Components.Base;
+using CircuitSharp.Components.Chips.Utils;
 using CircuitSharp.Core;
 using CircuitSharp.Machines;
 using CLanguage;
@@ -32,8 +33,31 @@ namespace CircuitSharp.Components.Chips
 
         #region Properties
 
-        public new Lead Lead0 => new Lead(this, 0);
-        public new Lead Lead1 => new Lead(this, 1);
+        public Action<byte> OnSendSerialData;
+
+        public new Lead PD0Lead => new Lead(this, 0);
+        public new Lead PD1Lead => new Lead(this, 1);
+        public new Lead PD2Lead => new Lead(this, 2);
+        public new Lead PD3Lead => new Lead(this, 3);
+        public new Lead PD4Lead => new Lead(this, 4);
+        public new Lead PD5Lead => new Lead(this, 5);
+        public new Lead PD6Lead => new Lead(this, 6);
+        public new Lead PD7Lead => new Lead(this, 7);
+        public new Lead PB0Lead => new Lead(this, 8);
+        public new Lead PB1Lead => new Lead(this, 9);
+        public new Lead PB2Lead => new Lead(this, 10);
+        public new Lead PB3Lead => new Lead(this, 11);
+        public new Lead PB4Lead => new Lead(this, 12);
+        public new Lead PB5Lead => new Lead(this, 13);
+        public new Lead PC0Lead => new Lead(this, 14);
+        public new Lead PC1Lead => new Lead(this, 15);
+        public new Lead PC2Lead => new Lead(this, 16);
+        public new Lead PC3Lead => new Lead(this, 17);
+        public new Lead PC4Lead => new Lead(this, 18);
+        public new Lead PC5Lead => new Lead(this, 19);
+        public new Lead PC6Lead => new Lead(this, 20);
+        public new Lead VCCLead => new Lead(this, 21);
+        public new Lead GNDLead => new Lead(this, 22);
 
         #endregion
 
@@ -54,12 +78,21 @@ namespace CircuitSharp.Components.Chips
         private double frequency;
         private double freqTimeZero;
 
+        private double time;
+
+        private readonly Serial serial;
+
         #endregion
 
         #region Constructor
 
         public ATmega328P(string code)
         {
+            serial = new Serial(64)
+            {
+                OnArduinoSend = OnSendSerialData
+            };
+
             var machine = new ATmega328PMachineInfo(this);
             var fullCode = code + "\n\nvoid main() { __cinit(); setup(); while(1){loop();}}";
             interpreter = CLanguageService.CreateInterpreter(fullCode, machine);
@@ -85,6 +118,16 @@ namespace CircuitSharp.Components.Chips
         public void Sleep(int value)
         {
             sleepTime = value * 1000;
+        }
+
+        public long Millis()
+        {
+            return (long) Math.Round(time * 1000);
+        }
+
+        public void SerialBegin(int baud)
+        {
+            serial.Begin(baud);
         }
 
         public void SetPinMode(short pin, int mode)
@@ -269,6 +312,9 @@ namespace CircuitSharp.Components.Chips
 
         public override void Step(Circuit circuit)
         {
+            time = circuit.GetTime();
+            serial.Update(time);
+
             for (var i = 0; i != GetLeadCount(); i++)
             {
                 var pin = pins[i];
@@ -306,7 +352,8 @@ namespace CircuitSharp.Components.Chips
         {
             for (var i = 0; i != GetLeadCount(); i++)
             {
-                pins[i].DutyCycle = 0;
+                if (!pins[i].IsControlPin)
+                    pins[i].DutyCycle = 0;
                 pins[i].Current = 0;
 
                 pinTotalTime[i] = 0;

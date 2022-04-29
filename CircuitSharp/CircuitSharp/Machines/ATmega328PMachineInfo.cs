@@ -96,6 +96,17 @@ namespace CircuitSharp.Machines
                 var value = (int) interpreter.ReadArg(0).UInt64Value;
                 aTmega328P.Sleep(value);
             });
+
+            AddInternalFunction("long millis ()", interpreter =>
+            {
+                interpreter.Push(aTmega328P.Millis());
+            });
+
+            AddInternalFunction("void SerialClass::begin (int baud)", interpreter =>
+            {
+                var baud = interpreter.ReadArg(0).Int16Value;
+                aTmega328P.SerialBegin(baud);
+            });
         }
 
         #endregion

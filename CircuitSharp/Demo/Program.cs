@@ -44,14 +44,14 @@ namespace Demo
             }
             ";
             var aTmega328 = circuit.Create<ATmega328P>(blinkCode);
-            var wire = circuit.Create<Wire>();
+            var resistor = circuit.Create<Resistor>(100);
 
-            circuit.Connect(aTmega328.Lead0, wire.LeadIn);
-            circuit.Connect(wire.LeadOut, aTmega328.Lead1);
+            circuit.Connect(aTmega328.VCCLead, resistor.LeadIn);
+            circuit.Connect(resistor.LeadOut, aTmega328.GNDLead);
 
             circuit.StartSimulation(() =>
             {
-                Console.WriteLine(circuit.GetTime() + " :: " + aTmega328.GetPinVoltage(ATmega328P.A1));
+                Console.WriteLine(Math.Round(circuit.GetTime() * 1000) + " :: " + resistor.GetVoltageDelta() + " :: " + aTmega328.GetPinVoltage(ATmega328P.A1));
             });
 
             Console.ReadLine();
