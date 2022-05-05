@@ -1,4 +1,5 @@
-﻿using CircuitSharp.Components.Chips;
+﻿using System;
+using CircuitSharp.Components.Chips;
 using CLanguage;
 
 namespace CircuitSharp.Machines
@@ -48,10 +49,11 @@ namespace CircuitSharp.Machines
                 struct SerialClass
                 {
                     void begin(int baud);
-                    void print(const char *value);
-                    void println(int value, int bas);
-                    void println(int value);
-                    void println(const char *value);
+                    void print (const char *value);
+                    void print (int value);
+                    void print (int value, int format);
+                    void print (float value);
+                    void print (float value, int format);
                 };
                 struct SerialClass Serial;
                 ";
@@ -106,6 +108,31 @@ namespace CircuitSharp.Machines
             {
                 var baud = interpreter.ReadArg(0).Int16Value;
                 aTmega328P.SerialBegin(baud);
+            });
+
+            AddInternalFunction("void SerialClass::print (const char *value)", interpreter =>
+            {
+                aTmega328P.SerialPrint(interpreter.ReadString(interpreter.ReadArg(0).PointerValue), -1);
+            });
+
+            AddInternalFunction("void SerialClass::print (int value)", interpreter =>
+            {
+                aTmega328P.SerialPrint(interpreter.ReadArg(0).Int16Value, -1);
+            });
+
+            AddInternalFunction("void SerialClass::print (int value, int format)", interpreter =>
+            {
+                aTmega328P.SerialPrint(interpreter.ReadArg(0).Int16Value, interpreter.ReadArg(1).Int16Value);
+            });
+
+            AddInternalFunction("void SerialClass::print (float value)", interpreter =>
+            {
+                aTmega328P.SerialPrint(interpreter.ReadArg(0).Float32Value, -1);
+            });
+            
+            AddInternalFunction("void SerialClass::print (float value, int format)", interpreter =>
+            {
+                aTmega328P.SerialPrint(interpreter.ReadArg(0).Float32Value, interpreter.ReadArg(1).Int16Value);
             });
         }
 

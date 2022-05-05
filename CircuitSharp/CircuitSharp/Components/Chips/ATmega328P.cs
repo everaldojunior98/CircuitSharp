@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using CircuitSharp.Components.Base;
 using CircuitSharp.Components.Chips.Utils;
 using CircuitSharp.Core;
@@ -33,8 +35,6 @@ namespace CircuitSharp.Components.Chips
 
         #region Properties
 
-        public Action<byte> OnSendSerialData;
-
         public new Lead PD0Lead => new Lead(this, 0);
         public new Lead PD1Lead => new Lead(this, 1);
         public new Lead PD2Lead => new Lead(this, 2);
@@ -65,7 +65,9 @@ namespace CircuitSharp.Components.Chips
 
         private readonly double pwmPeriod;
 
-        private const string InterpreterEntryPoint = "main";
+        private const string InterpreterEntryPoint = "__cinit";
+        private const string SetupEntryPoint = "setup";
+        private const string LoopEntryPoint = "main";
         private readonly CInterpreter interpreter;
 
         private Pin[] pins;
@@ -78,7 +80,7 @@ namespace CircuitSharp.Components.Chips
         private double frequency;
         private double freqTimeZero;
 
-        private double time;
+        private double currentTime;
 
         private readonly Serial serial;
 
@@ -86,18 +88,17 @@ namespace CircuitSharp.Components.Chips
 
         #region Constructor
 
-        public ATmega328P(string code)
+        public ATmega328P(string code, Action<byte> onSendSerialData)
         {
             serial = new Serial(64)
             {
-                OnArduinoSend = OnSendSerialData
+                OnArduinoSend = onSendSerialData
             };
 
             var machine = new ATmega328PMachineInfo(this);
-            var fullCode = code + "\n\nvoid main() { __cinit(); setup(); while(1){loop();}}";
+            var fullCode = code + "\n\nvoid main() { while(1){loop();}}";
             interpreter = CLanguageService.CreateInterpreter(fullCode, machine);
             interpreter.CpuSpeed = 10 ^ 9;
-            interpreter.Reset(InterpreterEntryPoint);
 
             frequency = PwmFrequency;
             pwmPeriod = 1 / PwmFrequency;
@@ -122,12 +123,43 @@ namespace CircuitSharp.Components.Chips
 
         public long Millis()
         {
-            return (long) Math.Round(time * 1000);
+            return (long) Math.Round(currentTime * 1000);
         }
 
         public void SerialBegin(int baud)
         {
             serial.Begin(baud);
+        }
+
+        public void SerialPrint(object value, int format)
+        {
+            byte[] bytes = null;
+            if (value is string stringValue)
+            {
+                bytes = Encoding.UTF8.GetBytes(stringValue);
+            }
+            else if (value is short intValue)
+            {
+                if (format > -1)
+                {
+                }
+                bytes = Encoding.UTF8.GetBytes(intValue.ToString());
+            }
+            else if (value is float floatValue)
+            {
+                if (format > -1)
+                    floatValue = (float) Math.Round(floatValue, format);
+                bytes = Encoding.UTF8.GetBytes(floatValue.ToString(CultureInfo.InvariantCulture));
+            }
+
+            if (bytes != null)
+                foreach (var writeValue in bytes)
+                    serial.Write(writeValue);
+        }
+
+        public void SerialPrintln(object value)
+        {
+
         }
 
         public void SetPinMode(short pin, int mode)
@@ -191,7 +223,7 @@ namespace CircuitSharp.Components.Chips
             pinTimeOn = new double[GetLeadCount()];
             pinTotalTime = new double[GetLeadCount()];
             pins = new Pin[GetLeadCount()];
-            
+
             //Digital Pins
             //0 - RXD
             pins[0] = new Pin("PD0", MaxVoltage, PinType.Digital);
@@ -257,9 +289,15 @@ namespace CircuitSharp.Components.Chips
                 IsControlPin = true
             };
 
+            interpreter.Reset(InterpreterEntryPoint);
             interpreter.Run();
+
+            interpreter.Reset(SetupEntryPoint);
+            interpreter.Run();
+
             AllocLeads();
-            Reset();
+
+            interpreter.Reset(LoopEntryPoint);
         }
 
         private void SetFrequency(double newFreq, double timeStep, double time)
@@ -312,8 +350,7 @@ namespace CircuitSharp.Components.Chips
 
         public override void Step(Circuit circuit)
         {
-            time = circuit.GetTime();
-            serial.Update(time);
+            currentTime = circuit.GetTime();
 
             for (var i = 0; i != GetLeadCount(); i++)
             {
@@ -362,7 +399,10 @@ namespace CircuitSharp.Components.Chips
                 LeadVolt[i] = 0;
             }
 
-            interpreter.Reset(InterpreterEntryPoint);
+            interpreter.Reset(SetupEntryPoint);
+            interpreter.Run();
+
+            interpreter.Reset(LoopEntryPoint);
             sleepTime = 0;
         }
 

@@ -32,9 +32,13 @@ namespace Demo
             {
                 pinMode(0, INPUT);
                 pinMode(A1, OUTPUT);
+                Serial.begin(9600);
+                Serial.print(""abc"");
             }
             void loop()
             {
+                Serial.print(""a"");
+                //Serial.print(1.456);
                 analogWrite(A1, 127);
                 //digitalWrite(1, HIGH);
                 delay(1000);
@@ -43,7 +47,13 @@ namespace Demo
                 delay(1000);
             }
             ";
-            var aTmega328 = circuit.Create<ATmega328P>(blinkCode);
+
+            var print = new Action<byte>(b =>
+            {
+                Console.WriteLine(Math.Round(circuit.GetTime() * 1000) + " :: " + ((char) b));
+            });
+
+            var aTmega328 = circuit.Create<ATmega328P>(blinkCode, print);
             var resistor = circuit.Create<Resistor>(100);
 
             circuit.Connect(aTmega328.VCCLead, resistor.LeadIn);
