@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Globalization;
+using System.Text;
 using CircularBuffer;
 
 namespace CircuitSharp.Components.Chips.Utils
@@ -64,15 +66,70 @@ namespace CircuitSharp.Components.Chips.Utils
         {
         }
 
-        public int Write(byte c)
+        public int Print(object value, int format)
+        {
+            var bytes = Encoding.UTF8.GetBytes(ObjectToString(value, format));
+            foreach (var b in bytes)
+                Write(b);
+            return bytes.Length;
+        }
+
+        public int Println(object value, int format)
+        {
+            var bytes = Encoding.UTF8.GetBytes(ObjectToString(value, format) + "\n");
+            foreach (var b in bytes)
+                Write(b);
+            return bytes.Length;
+        }
+
+        public void WriteToArduino(string value)
+        {
+            var bytes = Encoding.UTF8.GetBytes(value);
+            foreach (var b in bytes)
+                rxBuffer.PushFront(b);
+        }
+
+        #endregion
+
+        #region Private Methods
+        
+        private int Write(byte c)
         {
             OnArduinoSend?.Invoke(c);
             return 1;
         }
 
-        public void WriteToArduino(byte c)
+        private string ObjectToString(object value, int format)
         {
-            rxBuffer.PushFront(c);
+            if (value is string stringValue)
+                return stringValue;
+
+            if (value is short intValue)
+            {
+                var formattedValue = intValue.ToString();
+                if (format > -1)
+                {
+                    try
+                    {
+                        formattedValue = Convert.ToString(intValue, format);
+                    }
+                    catch
+                    {
+                        formattedValue = intValue.ToString();
+                    }
+                }
+
+                return formattedValue;
+            }
+
+            if (value is float floatValue)
+            {
+                if (format > -1)
+                    floatValue = (float) Math.Round(floatValue, format);
+                return floatValue.ToString(CultureInfo.InvariantCulture);
+            }
+
+            return string.Empty;
         }
 
         #endregion

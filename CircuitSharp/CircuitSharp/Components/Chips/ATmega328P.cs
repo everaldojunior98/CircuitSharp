@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Globalization;
 using System.Linq;
-using System.Text;
 using CircuitSharp.Components.Base;
 using CircuitSharp.Components.Chips.Utils;
 using CircuitSharp.Core;
@@ -130,36 +128,45 @@ namespace CircuitSharp.Components.Chips
         {
             serial.Begin(baud);
         }
-
-        public void SerialPrint(object value, int format)
+        
+        public void SerialEnd()
         {
-            byte[] bytes = null;
-            if (value is string stringValue)
-            {
-                bytes = Encoding.UTF8.GetBytes(stringValue);
-            }
-            else if (value is short intValue)
-            {
-                if (format > -1)
-                {
-                }
-                bytes = Encoding.UTF8.GetBytes(intValue.ToString());
-            }
-            else if (value is float floatValue)
-            {
-                if (format > -1)
-                    floatValue = (float) Math.Round(floatValue, format);
-                bytes = Encoding.UTF8.GetBytes(floatValue.ToString(CultureInfo.InvariantCulture));
-            }
-
-            if (bytes != null)
-                foreach (var writeValue in bytes)
-                    serial.Write(writeValue);
+            serial.End();
+        }
+        
+        public int SerialAvailable()
+        {
+            return serial.Available();
+        }
+        
+        public int SerialPeek()
+        {
+            return serial.Peek();
+        }
+        
+        public int SerialRead()
+        {
+            return serial.Read();
         }
 
-        public void SerialPrintln(object value)
+        public void SerialFlush()
         {
+            serial.Flush();
+        }
 
+        public int SerialPrint(object value, int format)
+        {
+           return serial.Print(value, format);
+        }
+
+        public int SerialPrintln(object value, int format)
+        {
+            return serial.Println(value, format);
+        }
+
+        public void WriteToArduino(string value)
+        {
+            serial.WriteToArduino(value);
         }
 
         public void SetPinMode(short pin, int mode)

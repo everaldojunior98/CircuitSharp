@@ -48,12 +48,22 @@ namespace CircuitSharp.Machines
                 typedef unsigned short word;
                 struct SerialClass
                 {
-                    void begin(int baud);
-                    void print (const char *value);
-                    void print (int value);
-                    void print (int value, int format);
-                    void print (float value);
-                    void print (float value, int format);
+                    void begin (int baud);
+                    void end ();
+                    int available ();
+                    int peek ();
+                    int read ();
+                    void flush ();
+                    int print (const char *value);
+                    int print (int value);
+                    int print (int value, int format);
+                    int print (float value);
+                    int print (float value, int format);
+                    int println (const char *value);
+                    int println (int value);
+                    int println (int value, int format);
+                    int println (float value);
+                    int println (float value, int format);
                 };
                 struct SerialClass Serial;
                 ";
@@ -109,30 +119,80 @@ namespace CircuitSharp.Machines
                 var baud = interpreter.ReadArg(0).Int16Value;
                 aTmega328P.SerialBegin(baud);
             });
-
-            AddInternalFunction("void SerialClass::print (const char *value)", interpreter =>
+            
+            AddInternalFunction("void SerialClass::end ()", interpreter =>
             {
-                aTmega328P.SerialPrint(interpreter.ReadString(interpreter.ReadArg(0).PointerValue), -1);
-            });
-
-            AddInternalFunction("void SerialClass::print (int value)", interpreter =>
-            {
-                aTmega328P.SerialPrint(interpreter.ReadArg(0).Int16Value, -1);
-            });
-
-            AddInternalFunction("void SerialClass::print (int value, int format)", interpreter =>
-            {
-                aTmega328P.SerialPrint(interpreter.ReadArg(0).Int16Value, interpreter.ReadArg(1).Int16Value);
-            });
-
-            AddInternalFunction("void SerialClass::print (float value)", interpreter =>
-            {
-                aTmega328P.SerialPrint(interpreter.ReadArg(0).Float32Value, -1);
+                aTmega328P.SerialEnd();
             });
             
-            AddInternalFunction("void SerialClass::print (float value, int format)", interpreter =>
+            AddInternalFunction("int SerialClass::available ()", interpreter =>
             {
-                aTmega328P.SerialPrint(interpreter.ReadArg(0).Float32Value, interpreter.ReadArg(1).Int16Value);
+                interpreter.Push(aTmega328P.SerialAvailable());
+            });
+            
+            AddInternalFunction("int SerialClass::peek ()", interpreter =>
+            {
+                interpreter.Push(aTmega328P.SerialPeek());
+            });
+            
+            AddInternalFunction("int SerialClass::read ()", interpreter =>
+            {
+                interpreter.Push(aTmega328P.SerialRead());
+            });
+            
+            AddInternalFunction("void SerialClass::flush ()", interpreter =>
+            {
+                aTmega328P.SerialFlush();
+            });
+
+            AddInternalFunction("int SerialClass::print (const char *value)", interpreter =>
+            {
+                interpreter.Push(aTmega328P.SerialPrint(interpreter.ReadString(interpreter.ReadArg(0).PointerValue), -1));
+            });
+
+            AddInternalFunction("int SerialClass::print (int value)", interpreter =>
+            {
+                interpreter.Push(aTmega328P.SerialPrint(interpreter.ReadArg(0).Int16Value, -1));
+            });
+
+            AddInternalFunction("int SerialClass::print (int value, int format)", interpreter =>
+            {
+                interpreter.Push(aTmega328P.SerialPrint(interpreter.ReadArg(0).Int16Value, interpreter.ReadArg(1).Int16Value));
+            });
+
+            AddInternalFunction("int SerialClass::print (float value)", interpreter =>
+            {
+                interpreter.Push(aTmega328P.SerialPrint(interpreter.ReadArg(0).Float32Value, -1));
+            });
+            
+            AddInternalFunction("int SerialClass::print (float value, int format)", interpreter =>
+            {
+                interpreter.Push(aTmega328P.SerialPrint(interpreter.ReadArg(0).Float32Value, interpreter.ReadArg(1).Int16Value));
+            });
+
+            AddInternalFunction("int SerialClass::println (const char *value)", interpreter =>
+            {
+                interpreter.Push(aTmega328P.SerialPrintln(interpreter.ReadString(interpreter.ReadArg(0).PointerValue), -1));
+            });
+
+            AddInternalFunction("int SerialClass::println (int value)", interpreter =>
+            {
+                interpreter.Push(aTmega328P.SerialPrintln(interpreter.ReadArg(0).Int16Value, -1));
+            });
+
+            AddInternalFunction("int SerialClass::println (int value, int format)", interpreter =>
+            {
+                interpreter.Push(aTmega328P.SerialPrintln(interpreter.ReadArg(0).Int16Value, interpreter.ReadArg(1).Int16Value));
+            });
+
+            AddInternalFunction("int SerialClass::println (float value)", interpreter =>
+            {
+                interpreter.Push(aTmega328P.SerialPrintln(interpreter.ReadArg(0).Float32Value, -1));
+            });
+
+            AddInternalFunction("int SerialClass::println (float value, int format)", interpreter =>
+            {
+                interpreter.Push(aTmega328P.SerialPrintln(interpreter.ReadArg(0).Float32Value, interpreter.ReadArg(1).Int16Value));
             });
         }
 
