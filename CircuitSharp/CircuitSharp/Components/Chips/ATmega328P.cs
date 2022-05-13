@@ -114,14 +114,24 @@ namespace CircuitSharp.Components.Chips
             return 0;
         }
 
-        public void Sleep(int value)
+        public void Delay(int value)
         {
             sleepTime = value * 1000;
         }
-
-        public long Millis()
+        
+        public void DelayMicroseconds(int value)
         {
-            return (long) Math.Round(currentTime * 1000);
+            sleepTime = value;
+        }
+
+        public ulong Micros()
+        {
+            return (ulong) Math.Round(currentTime);
+        }
+
+        public ulong Millis()
+        {
+            return (ulong) Math.Round(currentTime * 1000);
         }
 
         public void SerialBegin(int baud)

@@ -68,6 +68,8 @@ namespace CircuitSharp.Machines
                 struct SerialClass Serial;
                 ";
 
+            #region Digital / Analog I/O
+
             AddInternalFunction("void pinMode (int pin, int mode)", interpreter =>
             {
                 var pin = interpreter.ReadArg(0).Int16Value;
@@ -103,97 +105,299 @@ namespace CircuitSharp.Machines
                 aTmega328P.WriteAnalogPin(pin, value);
             });
 
+            #endregion
+
+            #region Time
+
             AddInternalFunction("void delay (unsigned long ms)", interpreter =>
             {
                 var value = (int) interpreter.ReadArg(0).UInt64Value;
-                aTmega328P.Sleep(value);
+                aTmega328P.Delay(value);
             });
 
-            AddInternalFunction("long millis ()", interpreter =>
+            AddInternalFunction("void delayMicroseconds (unsigned long us)", interpreter =>
             {
-                interpreter.Push(aTmega328P.Millis());
+                var value = (int) interpreter.ReadArg(0).UInt64Value;
+                aTmega328P.DelayMicroseconds(value);
             });
+
+            AddInternalFunction("unsigned long micros ()", interpreter => { interpreter.Push(aTmega328P.Micros()); });
+
+            AddInternalFunction("long millis ()", interpreter => { interpreter.Push(aTmega328P.Millis()); });
+
+            #endregion
+
+            #region Math
+
+            #region Abs
+
+            AddInternalFunction("char abs (char x)", interpreter =>
+            {
+                var x = interpreter.ReadArg(0).Int8Value;
+                interpreter.Push(Math.Abs(x));
+            });
+
+            AddInternalFunction("short abs (short x)", interpreter =>
+            {
+                var x = interpreter.ReadArg(0).Int8Value;
+                interpreter.Push(Math.Abs(x));
+            });
+
+            AddInternalFunction("int abs (int x)", interpreter =>
+            {
+                var x = interpreter.ReadArg(0).Int32Value;
+                interpreter.Push(Math.Abs(x));
+            });
+
+            AddInternalFunction("long abs (long x)", interpreter =>
+            {
+                var x = interpreter.ReadArg(0).Int32Value;
+                interpreter.Push(Math.Abs(x));
+            });
+
+            AddInternalFunction("long long abs (long long x)", interpreter =>
+            {
+                var x = interpreter.ReadArg(0).Int64Value;
+                interpreter.Push(Math.Abs(x));
+            });
+
+            AddInternalFunction("long long int abs (long long int x)", interpreter =>
+            {
+                var x = interpreter.ReadArg(0).Int64Value;
+                interpreter.Push(Math.Abs(x));
+            });
+
+            AddInternalFunction("float abs (float x)", interpreter =>
+            {
+                var x = interpreter.ReadArg(0).Float32Value;
+                interpreter.Push(Math.Abs(x));
+            });
+
+            AddInternalFunction("double abs (double x)", interpreter =>
+            {
+                var x = interpreter.ReadArg(0).Float64Value;
+                interpreter.Push(Math.Abs(x));
+            });
+
+            AddInternalFunction("long double abs (long double x)", interpreter =>
+            {
+                var x = interpreter.ReadArg(0).Float64Value;
+                interpreter.Push(Math.Abs(x));
+            });
+
+            #endregion
+
+            #region Constrain
+
+            AddInternalFunction("char constrain (char x, char a, char b)", interpreter =>
+            {
+                var x = interpreter.ReadArg(0).Int8Value;
+                var a = interpreter.ReadArg(1).Int8Value;
+                var b = interpreter.ReadArg(2).Int8Value;
+
+                if (x > b)
+                    interpreter.Push(b);
+                else if (x < a)
+                    interpreter.Push(a);
+                else
+                    interpreter.Push(x);
+            });
+
+            AddInternalFunction("short constrain (short x, short a, short b)", interpreter =>
+            {
+                var x = interpreter.ReadArg(0).Int8Value;
+                var a = interpreter.ReadArg(1).Int8Value;
+                var b = interpreter.ReadArg(2).Int8Value;
+
+                if (x > b)
+                    interpreter.Push(b);
+                else if (x < a)
+                    interpreter.Push(a);
+                else
+                    interpreter.Push(x);
+            });
+
+            AddInternalFunction("int constrain (int x, int a, int b)", interpreter =>
+            {
+                var x = interpreter.ReadArg(0).Int32Value;
+                var a = interpreter.ReadArg(1).Int32Value;
+                var b = interpreter.ReadArg(2).Int32Value;
+
+                if (x > b)
+                    interpreter.Push(b);
+                else if (x < a)
+                    interpreter.Push(a);
+                else
+                    interpreter.Push(x);
+            });
+
+            AddInternalFunction("long constrain (long x, long a, long b)", interpreter =>
+            {
+                var x = interpreter.ReadArg(0).Int32Value;
+                var a = interpreter.ReadArg(1).Int32Value;
+                var b = interpreter.ReadArg(2).Int32Value;
+
+                if (x > b)
+                    interpreter.Push(b);
+                else if (x < a)
+                    interpreter.Push(a);
+                else
+                    interpreter.Push(x);
+            });
+
+            AddInternalFunction("long long constrain (long long x, long long a, long long b)", interpreter =>
+            {
+                var x = interpreter.ReadArg(0).Int64Value;
+                var a = interpreter.ReadArg(1).Int64Value;
+                var b = interpreter.ReadArg(2).Int64Value;
+
+                if (x > b)
+                    interpreter.Push(b);
+                else if (x < a)
+                    interpreter.Push(a);
+                else
+                    interpreter.Push(x);
+            });
+
+            AddInternalFunction("long long int constrain (long long int x, long long int a, long long int b)", interpreter =>
+            {
+                var x = interpreter.ReadArg(0).Int64Value;
+                var a = interpreter.ReadArg(1).Int64Value;
+                var b = interpreter.ReadArg(2).Int64Value;
+
+                if (x > b)
+                    interpreter.Push(b);
+                else if (x < a)
+                    interpreter.Push(a);
+                else
+                    interpreter.Push(x);
+            });
+
+            AddInternalFunction("float constrain (float x, float a, float b)", interpreter =>
+            {
+                var x = interpreter.ReadArg(0).Float32Value;
+                var a = interpreter.ReadArg(1).Float32Value;
+                var b = interpreter.ReadArg(2).Float32Value;
+
+                if (x > b)
+                    interpreter.Push(b);
+                else if (x < a)
+                    interpreter.Push(a);
+                else
+                    interpreter.Push(x);
+            });
+
+            AddInternalFunction("double constrain (double x, double a, double b)", interpreter =>
+            {
+                var x = interpreter.ReadArg(0).Float64Value;
+                var a = interpreter.ReadArg(1).Float64Value;
+                var b = interpreter.ReadArg(2).Float64Value;
+
+                if (x > b)
+                    interpreter.Push(b);
+                else if (x < a)
+                    interpreter.Push(a);
+                else
+                    interpreter.Push(x);
+            });
+
+            AddInternalFunction("long double constrain (long double x, long double a, long double b)", interpreter =>
+            {
+                var x = interpreter.ReadArg(0).Float64Value;
+                var a = interpreter.ReadArg(1).Float64Value;
+                var b = interpreter.ReadArg(2).Float64Value;
+
+                if (x > b)
+                    interpreter.Push(b);
+                else if (x < a)
+                    interpreter.Push(a);
+                else
+                    interpreter.Push(x);
+            });
+
+            #endregion
+
+            #endregion
+
+            #region Serial
 
             AddInternalFunction("void SerialClass::begin (int baud)", interpreter =>
             {
                 var baud = interpreter.ReadArg(0).Int16Value;
                 aTmega328P.SerialBegin(baud);
             });
-            
-            AddInternalFunction("void SerialClass::end ()", interpreter =>
-            {
-                aTmega328P.SerialEnd();
-            });
-            
-            AddInternalFunction("int SerialClass::available ()", interpreter =>
-            {
-                interpreter.Push(aTmega328P.SerialAvailable());
-            });
-            
-            AddInternalFunction("int SerialClass::peek ()", interpreter =>
-            {
-                interpreter.Push(aTmega328P.SerialPeek());
-            });
-            
-            AddInternalFunction("int SerialClass::read ()", interpreter =>
-            {
-                interpreter.Push(aTmega328P.SerialRead());
-            });
-            
-            AddInternalFunction("void SerialClass::flush ()", interpreter =>
-            {
-                aTmega328P.SerialFlush();
-            });
 
-            AddInternalFunction("int SerialClass::print (const char *value)", interpreter =>
-            {
-                interpreter.Push(aTmega328P.SerialPrint(interpreter.ReadString(interpreter.ReadArg(0).PointerValue), -1));
-            });
+            AddInternalFunction("void SerialClass::end ()", interpreter => { aTmega328P.SerialEnd(); });
 
-            AddInternalFunction("int SerialClass::print (int value)", interpreter =>
-            {
-                interpreter.Push(aTmega328P.SerialPrint(interpreter.ReadArg(0).Int16Value, -1));
-            });
+            AddInternalFunction("int SerialClass::available ()",
+                interpreter => { interpreter.Push(aTmega328P.SerialAvailable()); });
 
-            AddInternalFunction("int SerialClass::print (int value, int format)", interpreter =>
-            {
-                interpreter.Push(aTmega328P.SerialPrint(interpreter.ReadArg(0).Int16Value, interpreter.ReadArg(1).Int16Value));
-            });
+            AddInternalFunction("int SerialClass::peek ()",
+                interpreter => { interpreter.Push(aTmega328P.SerialPeek()); });
 
-            AddInternalFunction("int SerialClass::print (float value)", interpreter =>
-            {
-                interpreter.Push(aTmega328P.SerialPrint(interpreter.ReadArg(0).Float32Value, -1));
-            });
-            
-            AddInternalFunction("int SerialClass::print (float value, int format)", interpreter =>
-            {
-                interpreter.Push(aTmega328P.SerialPrint(interpreter.ReadArg(0).Float32Value, interpreter.ReadArg(1).Int16Value));
-            });
+            AddInternalFunction("int SerialClass::read ()",
+                interpreter => { interpreter.Push(aTmega328P.SerialRead()); });
 
-            AddInternalFunction("int SerialClass::println (const char *value)", interpreter =>
-            {
-                interpreter.Push(aTmega328P.SerialPrintln(interpreter.ReadString(interpreter.ReadArg(0).PointerValue), -1));
-            });
+            AddInternalFunction("void SerialClass::flush ()", interpreter => { aTmega328P.SerialFlush(); });
 
-            AddInternalFunction("int SerialClass::println (int value)", interpreter =>
-            {
-                interpreter.Push(aTmega328P.SerialPrintln(interpreter.ReadArg(0).Int16Value, -1));
-            });
+            AddInternalFunction("int SerialClass::print (const char *value)",
+                interpreter =>
+                {
+                    interpreter.Push(aTmega328P.SerialPrint(interpreter.ReadString(interpreter.ReadArg(0).PointerValue),
+                        -1));
+                });
 
-            AddInternalFunction("int SerialClass::println (int value, int format)", interpreter =>
-            {
-                interpreter.Push(aTmega328P.SerialPrintln(interpreter.ReadArg(0).Int16Value, interpreter.ReadArg(1).Int16Value));
-            });
+            AddInternalFunction("int SerialClass::print (int value)",
+                interpreter => { interpreter.Push(aTmega328P.SerialPrint(interpreter.ReadArg(0).Int16Value, -1)); });
 
-            AddInternalFunction("int SerialClass::println (float value)", interpreter =>
-            {
-                interpreter.Push(aTmega328P.SerialPrintln(interpreter.ReadArg(0).Float32Value, -1));
-            });
+            AddInternalFunction("int SerialClass::print (int value, int format)",
+                interpreter =>
+                {
+                    interpreter.Push(aTmega328P.SerialPrint(interpreter.ReadArg(0).Int16Value,
+                        interpreter.ReadArg(1).Int16Value));
+                });
 
-            AddInternalFunction("int SerialClass::println (float value, int format)", interpreter =>
-            {
-                interpreter.Push(aTmega328P.SerialPrintln(interpreter.ReadArg(0).Float32Value, interpreter.ReadArg(1).Int16Value));
-            });
+            AddInternalFunction("int SerialClass::print (float value)",
+                interpreter => { interpreter.Push(aTmega328P.SerialPrint(interpreter.ReadArg(0).Float32Value, -1)); });
+
+            AddInternalFunction("int SerialClass::print (float value, int format)",
+                interpreter =>
+                {
+                    interpreter.Push(aTmega328P.SerialPrint(interpreter.ReadArg(0).Float32Value,
+                        interpreter.ReadArg(1).Int16Value));
+                });
+
+            AddInternalFunction("int SerialClass::println (const char *value)",
+                interpreter =>
+                {
+                    interpreter.Push(
+                        aTmega328P.SerialPrintln(interpreter.ReadString(interpreter.ReadArg(0).PointerValue), -1));
+                });
+
+            AddInternalFunction("int SerialClass::println (int value)",
+                interpreter => { interpreter.Push(aTmega328P.SerialPrintln(interpreter.ReadArg(0).Int16Value, -1)); });
+
+            AddInternalFunction("int SerialClass::println (int value, int format)",
+                interpreter =>
+                {
+                    interpreter.Push(aTmega328P.SerialPrintln(interpreter.ReadArg(0).Int16Value,
+                        interpreter.ReadArg(1).Int16Value));
+                });
+
+            AddInternalFunction("int SerialClass::println (float value)",
+                interpreter =>
+                {
+                    interpreter.Push(aTmega328P.SerialPrintln(interpreter.ReadArg(0).Float32Value, -1));
+                });
+
+            AddInternalFunction("int SerialClass::println (float value, int format)",
+                interpreter =>
+                {
+                    interpreter.Push(aTmega328P.SerialPrintln(interpreter.ReadArg(0).Float32Value,
+                        interpreter.ReadArg(1).Int16Value));
+                });
+
+            #endregion
         }
 
         #endregion
